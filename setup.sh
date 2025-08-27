@@ -9,7 +9,7 @@ echo "仓库: https://github.com/lgf5090/ssh.git"
 KEY_NAME="id_ed25519"
 ENCRYPTED_KEY="$KEY_NAME.encrypted"
 SSH_DIR="$HOME/.ssh"
-REPO_URL="https://github.com/lgf5090/ssh.git"
+REPO_URL="https://github.com/lgf5090/ssh"
 TEMP_DIR="/tmp/ssh-setup-$$"
 
 # 检查openssl是否安装
@@ -26,11 +26,14 @@ fi
 mkdir -p "$TEMP_DIR"
 cd "$TEMP_DIR"
 
-# 下载仓库文件
+# 下载仓库文件（修正URL，去掉main/）
 echo "下载SSH密钥文件..."
-if ! curl -s -O "https://raw.githubusercontent.com/lgf5090/ssh/main/$ENCRYPTED_KEY" && \
-   ! curl -s -O "https://raw.githubusercontent.com/lgf5090/ssh/main/$KEY_NAME.pub"; then
+if ! curl -s -f -O "https://raw.githubusercontent.com/lgf5090/ssh/$ENCRYPTED_KEY" && \
+   curl -s -f -O "https://raw.githubusercontent.com/lgf5090/ssh/$KEY_NAME.pub"; then
     echo "❌ 下载文件失败！请检查网络连接和仓库地址。"
+    echo "尝试的URL:"
+    echo "https://raw.githubusercontent.com/lgf5090/ssh/$ENCRYPTED_KEY"
+    echo "https://raw.githubusercontent.com/lgf5090/ssh/$KEY_NAME.pub"
     rm -rf "$TEMP_DIR"
     exit 1
 fi
@@ -38,6 +41,8 @@ fi
 # 检查文件是否下载成功
 if [ ! -f "$ENCRYPTED_KEY" ] || [ ! -f "$KEY_NAME.pub" ]; then
     echo "❌ 文件下载不完整！请检查仓库中文件是否存在。"
+    echo "当前目录文件:"
+    ls -la
     rm -rf "$TEMP_DIR"
     exit 1
 fi
