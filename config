@@ -1,4 +1,0 @@
-Host github.com
-    Hostname ssh.github.com  # 使用 GitHub 的备用域名
-    Port 443                 # 使用 HTTPS 的 443 端口
-    User git
