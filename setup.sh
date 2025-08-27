@@ -38,46 +38,27 @@ echo "开始下载SSH配置文件..."
 # 获取仓库中的文件列表
 declare -a ENCRYPTED_FILES=()
 
-# 预定义可能的文件模式（现在所有文件都是加密的）
-POSSIBLE_PATTERNS=(
-    "id_ed25519"
-    "id_rsa" 
-    "id_ecdsa"
-    "config"
-)
-
-# 同时检查可能的公钥文件模式
-POSSIBLE_PUB_PATTERNS=(
-    "id_ed25519.pub"
-    "id_rsa.pub"
-    "id_ecdsa.pub"
+# 预定义可能的文件模式
+POSSIBLE_ENCRYPTED_PATTERNS=(
+    "id_ed25519.encrypted"
+    "id_rsa.encrypted" 
+    "id_ecdsa.encrypted"
+    "id_ed25519.pub.encrypted"
+    "id_rsa.pub.encrypted"
+    "id_ecdsa.pub.encrypted"
+    "config.encrypted"
 )
 
 echo "扫描和下载加密文件..."
 
 # 扫描所有可能的加密文件
-for pattern in "${POSSIBLE_PATTERNS[@]}"; do
-    encrypted_file="${pattern}.encrypted"
-    
-    echo "尝试下载 $encrypted_file..."
-    if curl -f -L -s "$RAW_BASE_URL/$encrypted_file" -o "$encrypted_file" 2>/dev/null; then
-        echo "✅ 下载 $encrypted_file 成功"
-        ENCRYPTED_FILES+=("$encrypted_file")
+for encrypted_pattern in "${POSSIBLE_ENCRYPTED_PATTERNS[@]}"; do
+    echo "尝试下载 $encrypted_pattern..."
+    if curl -f -L -s "$RAW_BASE_URL/$encrypted_pattern" -o "$encrypted_pattern" 2>/dev/null; then
+        echo "✅ 下载 $encrypted_pattern 成功"
+        ENCRYPTED_FILES+=("$encrypted_pattern")
     else
-        echo "⚠️  $encrypted_file 不存在，跳过"
-    fi
-done
-
-# 扫描加密的公钥文件
-for pub_pattern in "${POSSIBLE_PUB_PATTERNS[@]}"; do
-    encrypted_pub="${pub_pattern}.encrypted"
-    
-    echo "尝试下载 $encrypted_pub..."
-    if curl -f -L -s "$RAW_BASE_URL/$encrypted_pub" -o "$encrypted_pub" 2>/dev/null; then
-        echo "✅ 下载 $encrypted_pub 成功"
-        ENCRYPTED_FILES+=("$encrypted_pub")
-    else
-        echo "⚠️  $encrypted_pub 不存在，跳过"
+        echo "⚠️  $encrypted_pattern 不存在，跳过"
     fi
 done
 
