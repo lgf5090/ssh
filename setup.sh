@@ -9,7 +9,7 @@ echo "仓库: https://github.com/lgf5090/ssh.git"
 KEY_NAME="id_ed25519"
 ENCRYPTED_KEY="$KEY_NAME.encrypted"
 SSH_DIR="$HOME/.ssh"
-REPO_URL="https://github.com/lgf5090/ssh"
+REPO_URL="https://github.com/lgf5090/ssh.git"
 TEMP_DIR="/tmp/ssh-setup-$$"
 
 # 检查openssl是否安装
@@ -26,28 +26,46 @@ fi
 mkdir -p "$TEMP_DIR"
 cd "$TEMP_DIR"
 
-# 下载仓库文件（修正URL，去掉main/）
+echo "当前工作目录: $(pwd)"
 echo "下载SSH密钥文件..."
-if ! curl -s -f -O "https://raw.githubusercontent.com/lgf5090/ssh/$ENCRYPTED_KEY" && \
-   curl -s -f -O "https://raw.githubusercontent.com/lgf5090/ssh/$KEY_NAME.pub"; then
-    echo "❌ 下载文件失败！请检查网络连接和仓库地址。"
-    echo "尝试的URL:"
-    echo "https://raw.githubusercontent.com/lgf5090/ssh/$ENCRYPTED_KEY"
-    echo "https://raw.githubusercontent.com/lgf5090/ssh/$KEY_NAME.pub"
+
+# 下载加密的私钥文件
+echo "下载 $ENCRYPTED_KEY..."
+if ! curl -f -L -s "https://raw.githubusercontent.com/lgf5090/ssh/main/$ENCRYPTED_KEY" -o "$ENCRYPTED_KEY"; then
+    echo "❌ 下载私钥文件失败！"
+    echo "请检查文件是否存在: https://raw.githubusercontent.com/lgf5090/ssh/main/$ENCRYPTED_KEY"
+    rm -rf "$TEMP_DIR"
+    exit 1
+fi
+
+# 下载公钥文件
+echo "下载 $KEY_NAME.pub..."
+if ! curl -f -L -s "https://raw.githubusercontent.com/lgf5090/ssh/main/$KEY_NAME.pub" -o "$KEY_NAME.pub"; then
+    echo "❌ 下载公钥文件失败！"
+    echo "请检查文件是否存在: https://raw.githubusercontent.com/lgf5090/ssh/main/$KEY_NAME.pub"
     rm -rf "$TEMP_DIR"
     exit 1
 fi
 
 # 检查文件是否下载成功
-if [ ! -f "$ENCRYPTED_KEY" ] || [ ! -f "$KEY_NAME.pub" ]; then
-    echo "❌ 文件下载不完整！请检查仓库中文件是否存在。"
-    echo "当前目录文件:"
-    ls -la
+echo "检查下载的文件..."
+ls -la "$TEMP_DIR"
+
+if [ ! -f "$ENCRYPTED_KEY" ]; then
+    echo "❌ 加密私钥文件不存在！"
+    rm -rf "$TEMP_DIR"
+    exit 1
+fi
+
+if [ ! -f "$KEY_NAME.pub" ]; then
+    echo "❌ 公钥文件不存在！"
     rm -rf "$TEMP_DIR"
     exit 1
 fi
 
 echo "✅ 文件下载完成"
+echo "加密私钥大小: $(wc -c < "$ENCRYPTED_KEY") 字节"
+echo "公钥大小: $(wc -c < "$KEY_NAME.pub") 字节"
 
 # 创建~/.ssh目录（如果不存在）
 mkdir -p "$SSH_DIR"
@@ -86,7 +104,7 @@ echo "🔓 公钥文件: $SSH_DIR/$KEY_NAME.pub"
 echo ""
 
 # 显示公钥内容（方便用户添加到GitHub等）
-echo "=== 公钥内容（复制到GitHub）==="
+echo "=== 公钥内容 ==="
 cat "$SSH_DIR/$KEY_NAME.pub"
 echo ""
 
