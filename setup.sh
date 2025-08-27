@@ -81,7 +81,7 @@ echo "🔓 公钥文件: $SSH_DIR/$KEY_NAME.pub"
 echo ""
 
 # 显示公钥内容（方便用户添加到GitHub等）
-echo "=== 公钥内容 ==="
+echo "=== 公钥内容（复制到GitHub）==="
 cat "$SSH_DIR/$KEY_NAME.pub"
 echo ""
 
