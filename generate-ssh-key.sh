@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # generate-ssh-key.sh - SSH密钥生成、加密和管理工具
-VERSION="2.0"
+VERSION="2.1"
 
 # 颜色定义
 RED='\033[0;31m'
@@ -115,7 +115,7 @@ generate_ssh_key() {
     return $?
 }
 
-# 加密文件
+# 加密文件 - 修复版本
 encrypt_file() {
     local source_file="$1"
     local encrypted_file="$2"
@@ -128,10 +128,21 @@ encrypt_file() {
     
     echo -e "${YELLOW}🔐 加密文件: $(basename "$source_file")${NC}"
     
-    if openssl aes-256-cbc -salt -in "$source_file" -out "$encrypted_file" -pass pass:"$password" 2>/dev/null; then
+    # 使用兼容性更好的参数，明确指定不使用pbkdf2
+    if openssl aes-256-cbc -salt -md md5 -in "$source_file" -out "$encrypted_file" -pass pass:"$password" 2>/dev/null; then
         echo -e "${GREEN}✅ 加密成功: $(basename "$encrypted_file")${NC}"
         chmod 600 "$encrypted_file"
-        return 0
+        
+        # 验证加密文件
+        echo -e "${CYAN}🔍 验证加密文件...${NC}"
+        if openssl aes-256-cbc -d -salt -md md5 -in "$encrypted_file" -pass pass:"$password" -out /dev/null 2>/dev/null; then
+            echo -e "${GREEN}✅ 加密文件验证成功${NC}"
+            return 0
+        else
+            echo -e "${RED}❌ 加密文件验证失败，删除损坏的加密文件${NC}"
+            rm -f "$encrypted_file"
+            return 1
+        fi
     else
         echo -e "${RED}❌ 加密失败: $(basename "$source_file")${NC}"
         return 1
@@ -213,6 +224,7 @@ new_key_pair() {
         echo -e "🔓 公钥文件: ${CYAN}$CURRENT_DIR/$key_name.pub${NC}"
         echo ""
         echo -e "${YELLOW}💡 请妥善保管加密密码${NC}"
+        echo -e "${CYAN}💡 加密使用兼容模式，可使用setup.sh正常解密${NC}"
         
         return 0
     else
@@ -285,6 +297,7 @@ scan_and_encrypt() {
     echo ""
     echo -e "${GREEN}=== 加密完成 ===${NC}"
     echo -e "✅ 成功加密 ${success_count}/${#files_to_encrypt[@]} 个文件"
+    echo -e "${CYAN}💡 使用兼容模式加密，可使用setup.sh正常解密${NC}"
     
     if [ $success_count -eq ${#files_to_encrypt[@]} ]; then
         echo -e "${YELLOW}💡 所有原始文件已被安全删除${NC}"
