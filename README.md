@@ -7,7 +7,8 @@
 ### 方法一：直接下载运行（推荐）
 ```bash
 # 下载并运行安装脚本
-curl -s https://raw.githubusercontent.com/lgf5090/ssh/main/setup.sh | bash
+# curl -s https://raw.githubusercontent.com/lgf5090/ssh/main/setup.sh | bash  管道输入不了密码
+curl -s https://raw.githubusercontent.com/lgf5090/ssh/main/setup.sh -o setup.sh && bash setup.sh
 ```
 
 ### 方法二：手动下载运行
